@@ -26,6 +26,5 @@ build() {
 package() {
     cd $pkgname-$pkgver/build
     make DESTDIR="$pkgdir/" install
-    #cmake --build . -- install  # If package needs to be installed
 }
 
