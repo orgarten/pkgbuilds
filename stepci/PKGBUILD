@@ -1,0 +1,38 @@
+# Maintainer: Orell Garten <hello@orellgarten.com>
+pkgname=stepci
+pkgver=2.7.2
+pkgrel=1
+provides=('stepci')
+pkgdesc='An automated API Testing an QA tool'
+url='https://stepci.com/'
+arch=('any')
+license=('MPL')
+makedepends=('npm')
+source=(
+    "https://registry.npmjs.org/stepci/-/stepci-2.7.2.tgz"
+)
+b2sums=(
+    '5b79387145303a2a4da9171784623c338b5e9f87543de5f6c31212749d5c93efe5b6121e2467aa956f3c551a193ecc57f8b8ec19dbf4b9481d07cf49f78a43e6'
+)
+
+package() {
+
+    npm install -g --prefix "$pkgdir/usr" "${srcdir}/${pkgname}-${pkgver}.tgz"
+    
+    # Remove references to $pkgdir
+	find "$pkgdir" -type f -name package.json -print0 | xargs -0 sed -i "/_where/d"
+
+	# Remove references to $srcdir
+	local tmppackage="$(mktemp)"
+	local pkgjson="$pkgdir/usr/lib/node_modules/$pkgname/package.json"
+	jq '.|=with_entries(select(.key|test("_.+")|not))' "$pkgjson" > "$tmppackage"
+	mv "$tmppackage" "$pkgjson"
+	chmod 644 "$pkgjson"
+
+    find "$pkgdir" -type f -name package.json | while read pkgjson; do
+		local tmppackage="$(mktemp)"
+		jq 'del(.man)' "$pkgjson" > "$tmppackage"
+		mv "$tmppackage" "$pkgjson"
+		chmod 644 "$pkgjson"
+	done
+}
